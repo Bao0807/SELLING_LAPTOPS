@@ -1,0 +1,523 @@
+{
+  "info": {
+    "_postman_id": "cas-backend-v1",
+    "name": "CAS Backend API",
+    "description": "Complete REST API collection for the CAS Laptop E-commerce backend. Base URL: http://localhost:5000/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:5000/api" },
+    { "key": "token",        "value": "" },
+    { "key": "adminToken",   "value": "" },
+    { "key": "productId",    "value": "1" },
+    { "key": "orderId",      "value": "1" },
+    { "key": "cartItemId",   "value": "1" },
+    { "key": "voucherId",    "value": "1" },
+    { "key": "reviewId",     "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Nguyễn Test\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"0912345678\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Customer)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": ["var json = pm.response.json(); if(json.data && json.data.token) { pm.collectionVariables.set('token', json.data.token); }"]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer1@cas.vn\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": ["var json = pm.response.json(); if(json.data && json.data.token) { pm.collectionVariables.set('adminToken', json.data.token); }"]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@cas.vn\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Profile (GET /me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/auth/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Tên Mới\",\n  \"phone\": \"0987654321\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/auth/change-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"123456\",\n  \"newPassword\": \"newpass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛍️ Products (Public)",
+      "item": [
+        {
+          "name": "Get All Products (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&limit=12&sort=newest",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "sort", "value": "newest" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter by Category (slug)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products?category=gaming&sort=price_asc"
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/search?q=ASUS"
+          }
+        },
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/featured"
+          }
+        },
+        {
+          "name": "Get Bestsellers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/bestsellers"
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/products/{{productId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/cart"
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/cart",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/cart/{{cartItemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/cart/{{cartItemId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "❤️ Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/wishlist"
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/wishlist",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/wishlist/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Vouchers (Public)",
+      "item": [
+        {
+          "name": "Validate Voucher Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/vouchers/validate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"cartTotal\": 15000000\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Nguyễn Văn A\",\n  \"phone\": \"0912345678\",\n  \"shipping_address\": \"123 Lê Lợi, Quận 1, TP.HCM\",\n  \"payment_method\": \"cod\",\n  \"voucher_code\": \"WELCOME10\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "Get Order Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reviews/product/{{productId}}"
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Sản phẩm rất tốt, đúng như mô tả!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/reviews/{{reviewId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Laptop tốt nhưng hơi nặng.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/reviews/{{reviewId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Admin",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/dashboard"
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/products",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name",           "value": "ASUS ROG Strix G16 2024" },
+                { "key": "slug",           "value": "asus-rog-strix-g16-2024" },
+                { "key": "brand",          "value": "ASUS" },
+                { "key": "price",          "value": "35000000" },
+                { "key": "discount_price", "value": "32000000" },
+                { "key": "stock_quantity", "value": "20" },
+                { "key": "category_id",    "value": "1" },
+                { "key": "cpu",            "value": "Intel Core i9-14900HX" },
+                { "key": "ram",            "value": "32GB DDR5" },
+                { "key": "storage",        "value": "1TB NVMe SSD" },
+                { "key": "gpu",            "value": "NVIDIA RTX 4080" },
+                { "key": "display",        "value": "16 inch QHD 240Hz" },
+                { "key": "is_featured",    "value": "true" },
+                { "key": "image",          "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/products/{{productId}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "discount_price", "value": "31000000" },
+                { "key": "stock_quantity", "value": "15" },
+                { "key": "is_featured",    "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/orders?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Vouchers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/vouchers"
+          }
+        },
+        {
+          "name": "Create Voucher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/admin/vouchers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"NEWCODE20\",\n  \"discount_type\": \"percent\",\n  \"discount_value\": 20,\n  \"minimum_order_amount\": 10000000,\n  \"usage_limit\": 50,\n  \"start_date\": \"2026-01-01\",\n  \"end_date\": \"2027-12-31\",\n  \"status\": \"active\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Voucher",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/vouchers/{{voucherId}}"
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/users?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/users/2"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/users/2"
+          }
+        },
+        {
+          "name": "Get All Reviews (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reviews"
+          }
+        },
+        {
+          "name": "Delete Review (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reviews/{{reviewId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
